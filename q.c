@@ -85,14 +85,17 @@ Queue_t *q_destroy( Queue_t * Q )
 
 int q_push( Queue_t *Q, void *T )
 {
+   int rv ; 
    q_lock( Q );
    while( q_full( Q ) ) q_wait( Q->is_full, Q->lock ) ;
 
    Q->task[Q->head] = T ;
    Q->head = INCR( Q, Q->head ) ;
-
+   rv = q_qty( Q );
+   
    q_signal( Q->is_empty ) ;
    q_unlock( Q ) ;
+   return rv ;
 }
 
 void *q_pop( Queue_t *Q )
