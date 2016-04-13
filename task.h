@@ -4,6 +4,11 @@
 
 #define isNul( x )      ((void *) x == (void *) NULL )
 
+// tasks carry a creation timestamp (microseconds), and
+// the file descriptor, the request and the reply.  This
+// is basically all you need to use for select(), and where
+// the client will always be an int file descriptor, the request
+// and reply might be strings, or other stuff ... 
 typedef struct _tsk_ {
   unsigned ctime ;
   int client ;
