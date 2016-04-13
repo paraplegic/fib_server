@@ -48,8 +48,8 @@ int n_clients = 0 ;
 int clients[FD_SETSIZE] = {-1} ; 
 #define c_push( client )	clients[n_clients] = (n_clients < FD_SETSIZE) ? client : cx_die( "client buffer overflow" ); n_clients++
 
-Node_t *inp_Q = (Node_t *) NULL ;
-Node_t *wrk_Q = (Node_t *) NULL ;
+Queue_t *inp_Q = (Queue_t *) NULL ;
+Queue_t *wrk_Q = (Queue_t *) NULL ;
 
 int main( int argc, char **argv )
 {
