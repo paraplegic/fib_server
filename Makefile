@@ -21,3 +21,6 @@ clean:
 
 backup:	clean
 	(cd .. ; tar -zcvf $(BKUP) ./fib )
+
+status:	clean
+	git status
