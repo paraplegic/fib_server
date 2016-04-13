@@ -1,5 +1,10 @@
 #include "q.h"
 
+// This file implements a pthread safe fifo queue for use with C.
+// usage is described in the fib.c source, and this should be refactored
+// to have in internal and a public interface ... for now, it is just a 
+// toy to understand pthread_mutex and pthread_cond variables in a locking
+// sleeping context ....
 int q_unlock( Queue_t *Q )
 {
    return pthread_mutex_unlock( Q->lock ) ;
