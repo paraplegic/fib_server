@@ -7,7 +7,6 @@
 
 #define isNul( x )      ((void *) x == (void *) NULL )
 
-typedef struct _que_ Node_t ;
 typedef pthread_mutex_t Lock_t ;
 typedef pthread_cond_t Cond_t ;
 
