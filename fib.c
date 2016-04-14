@@ -142,8 +142,7 @@ int cx_server( int wk_socket )
   {
       if( FD_ISSET( clients[fd], &fd_read ) )
       {
-         Task_t *T = task_crt( clients[fd], -1, -1 ) ;
-         q_push( inp_Q, T ) ;
+         q_push( inp_Q, task_crt( clients[fd], -1, -1 ) ) ;
       }
   }
 
