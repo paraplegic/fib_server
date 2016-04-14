@@ -17,7 +17,7 @@ q.o:	q.c q.h
 
 clean:
 	rm -rf fib *.o
-	rm -rf $(BKUP)
+	rm -rf ../$(BKUP)
 
 backup:	clean
 	(cd .. ; tar -zcvf $(BKUP) ./fib )
