@@ -61,8 +61,8 @@ int main( int argc, char **argv )
      usage( argc, argv ) ;
    }
 
-   inp_Q = q_create( 128 ) ;
-   wrk_Q = q_create( 128 ) ;
+   inp_Q = q_create( 128, (Func_t *) task_del ) ;
+   wrk_Q = q_create( 128, (Func_t *) task_del ) ;
 
    cx = 0 ; 
    pthread_create( (pthread_t *) &threads[cx++], NULL, cx_read_task, NULL ) ;
@@ -74,22 +74,15 @@ int main( int argc, char **argv )
    // if this returns, it should be a good socket 
    wk_socket = cx_wellknown( atol( argv[1] ) ) ;
    cx_info( "Started service on port %d.\n", atol( argv[1] ) ) ; 
-   cx_server_init( wk_socket );
    while( FOREVER )
    {
       cx_server( wk_socket ) ;
    }
+
+   inp_Q = q_destroy( inp_Q ) ;
+   wrk_Q = q_destroy( wrk_Q ) ;
    cx_die( "server returned." ) ; 
    exit( 1 ) ;
-}
-
-int cx_server_init( int wk_socket )
-{
-  FD_ZERO( &fd_read ) ;
-  FD_ZERO( &fd_write ) ;
-  tm_out.tv_sec = 10 ;
-  tm_out.tv_usec = 0 ;
-  return 1 ;
 }
 
 int cx_server( int wk_socket )

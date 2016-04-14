@@ -9,11 +9,13 @@
 
 typedef pthread_mutex_t Lock_t ;
 typedef pthread_cond_t Cond_t ;
+typedef void *(Func_t( void * ));
 
 typedef struct _que_ {
   Lock_t *lock ;
   Cond_t *is_empty ;
   Cond_t *is_full ;
+  Func_t *siva ;
   int 	  head ;
   int     tail ;
   int     size ;
@@ -23,7 +25,7 @@ typedef struct _que_ {
 #define INCR( q, val )	((val+1)%q->size)
 #define DECR( q, val )	(((val-1) > -1)?(val-1):0)
 
-Queue_t *q_create( int size ) ;
+Queue_t *q_create( int size, Func_t *siva ) ;
 Queue_t *q_destroy( Queue_t *Q ) ;
 int      q_push( Queue_t *Q, void *T ) ;
 void    *q_pop( Queue_t *Q ) ;

@@ -27,7 +27,6 @@
 void cx_info( char *msg, int data ) ;
 int cx_error( char *msg ) ;
 int cx_die( char *msg ) ;
-int cx_server_init( int wk_socket ) ;
 int cx_server( int wk_socket ) ;
 void *cx_write_task( void *arg );
 void *cx_read_task( void *arg );

@@ -1,10 +1,12 @@
 #include "q.h"
 
+//
 // This file implements a pthread safe fifo queue for use with C.
 // usage is described in the fib.c source, and this should be refactored
 // to have in internal and a public interface ... for now, it is just a 
 // toy to understand pthread_mutex and pthread_cond variables in a locking
 // sleeping context ....
+//
 int q_unlock( Queue_t *Q )
 {
    return pthread_mutex_unlock( Q->lock ) ;
@@ -46,7 +48,7 @@ int q_full( Queue_t *Q )
    return q_avail( Q ) < 1 ;
 }
 
-Queue_t *q_create( int size )
+Queue_t *q_create( int size, Func_t *siva )
 {
    Queue_t *rv ;
 
@@ -73,6 +75,10 @@ Queue_t *q_destroy( Queue_t * Q )
 {
   if( !isNul( Q ) )
   {
+    if( !isNul( Q->siva ) )
+    {
+       while( !q_empty( Q ) ) Q->siva( q_pop( Q ) ) ;
+    }
     if( !isNul( Q->lock ) ) free( Q->lock ) ;
     if( !isNul( Q->is_empty ) ) free( Q->is_empty ) ;
     if( !isNul( Q->is_full ) ) free( Q->is_full ) ;
@@ -105,6 +111,7 @@ void *q_pop( Queue_t *Q )
   while( q_empty( Q ) ) q_wait( Q->is_empty, Q->lock ) ; 
 
   rv = Q->task[ Q->tail ] ;
+  Q->task[ Q->tail ] = (void *) NULL ;
   Q->tail = INCR( Q, Q->tail ) ;
 
   q_signal( Q->is_full ) ;
