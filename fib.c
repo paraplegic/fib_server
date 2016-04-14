@@ -2,6 +2,9 @@
 #include "task.h"
 #include "q.h"
 
+// an (intentionally) inefficient fib generator which 
+// moves very slowly beyond input number 44 ... and time
+// of execution is a log function of the input value ...
 int fib( int n )
 {
    if( n <= 2 )
@@ -10,12 +13,14 @@ int fib( int n )
    return fib( n - 1 ) + fib( n - 2 ) ;
 }
 
+// must have usage info ...
 void usage( int argc, char **argv )
 {
    printf( "usage:  %s <port>\n", argv[0] ) ;
    exit( 1 ) ;
 }
 
+// general output routine ...
 void cx_info( char *msg, int data )
 {
    printf( msg, data ) ;
@@ -23,6 +28,7 @@ void cx_info( char *msg, int data )
    return ;
 }
 
+// error message routine ...
 int cx_error( char *msg )
 {
    perror( msg );
@@ -31,6 +37,7 @@ int cx_error( char *msg )
    return 1; 
 }
 
+// we aren't coming back from this ...
 int cx_die( char *msg )
 {
    perror( msg );
@@ -39,15 +46,24 @@ int cx_die( char *msg )
    exit( 1 );
 }
 
+// select information:
+//   read, write and exception sets, and timeouts (if used) ...
+//   they needn't be global, but were prototyped this way.
 fd_set fd_read  ;
 fd_set fd_write ;
 int    fd_num = 0 ; 
 struct timeval tm_out ;
 
+//
+// each client gets it's own file descriptor and stream socket ...
 int n_clients = 0 ; 
 int clients[FD_SETSIZE] = {-1} ; 
 #define c_push( client )	clients[n_clients] = (n_clients < FD_SETSIZE) ? client : cx_die( "client buffer overflow" ); n_clients++
 
+//
+// work moves from select() to the input queue, and
+// from there to the work queue, back to the client
+// this is how we pass a work assignment to the threads ...
 Queue_t *inp_Q = (Queue_t *) NULL ;
 Queue_t *wrk_Q = (Queue_t *) NULL ;
 
@@ -61,27 +77,34 @@ int main( int argc, char **argv )
      usage( argc, argv ) ;
    }
 
+   // input and work queues created here ...
    inp_Q = q_create( 128, (Func_t *) task_del ) ;
    wrk_Q = q_create( 128, (Func_t *) task_del ) ;
 
    cx = 0 ; 
+   // just a few worker threads: 2 readers and 3 writers ... 
    pthread_create( (pthread_t *) &threads[cx++], NULL, cx_read_task, NULL ) ;
    pthread_create( (pthread_t *) &threads[cx++], NULL, cx_read_task, NULL ) ;
    pthread_create( (pthread_t *) &threads[cx++], NULL, cx_write_task, NULL ) ;
    pthread_create( (pthread_t *) &threads[cx++], NULL, cx_write_task, NULL ) ;
    pthread_create( (pthread_t *) &threads[cx++], NULL, cx_write_task, NULL ) ;
 
-   // if this returns, it should be a good socket 
+   // if this returns, it should be a good socket, on a well known port
+   // as provided at run time as an argument ... should be > 1024 ... 
+   cx_info( "Starting service on port %d: ", atol( argv[1] ) ) ; 
    wk_socket = cx_wellknown( atol( argv[1] ) ) ;
-   cx_info( "Started service on port %d.\n", atol( argv[1] ) ) ; 
+   cx_info( "Done.\n", 0 ) ; 
    while( FOREVER )
    {
       cx_server( wk_socket ) ;
    }
 
+   // no mechanism is available yet to shut down this server ...
+   // but we should design that in, and if so, clean up the queues,
+   // flush and close the clients, and in general .. clean up ...
    inp_Q = q_destroy( inp_Q ) ;
    wrk_Q = q_destroy( wrk_Q ) ;
-   cx_die( "server returned." ) ; 
+   cx_info( "Unexpected server return.\n", 0 ) ; 
    exit( 1 ) ;
 }
 
@@ -113,7 +136,6 @@ int cx_server( int wk_socket )
   {
     cx = cx_next( wk_socket ) ;
     cx_client_add( cx ) ; 
-printf( "%s: new %d rv %d\n", __func__, cx, rv ) ;
   } 
 
   for( fd = 1 ; fd < n_clients ; fd++ )
