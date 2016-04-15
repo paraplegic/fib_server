@@ -35,5 +35,6 @@ Queue_t *q_create( int size, Func_t *siva ) ;
 Queue_t *q_destroy( Queue_t *Q ) ;
 int      q_push( Queue_t *Q, void *T ) ;
 void    *q_pop( Queue_t *Q ) ;
+int	 q_size( Queue_t *Q ) ;
 
 #endif // QUEUE_DEFINEd

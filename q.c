@@ -7,47 +7,56 @@
 // toy to understand pthread_mutex and pthread_cond variables in a locking
 // and sleeping context ....
 //
+
 /*
   -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-   internal interface ...
+   internal interface ... don't look at these ...
   -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 */
+
+// unlock the Q ...
 int q_unlock( Queue_t *Q )
 {
    return pthread_mutex_unlock( Q->lock ) ;
 }
 
+// lock the Q ...
 int q_lock( Queue_t *Q )
-
 {
    return pthread_mutex_lock( Q->lock ) ;
 }
 
+// signal a thread waiting on a condition variable ...
 int q_signal( Cond_t *condition )
 {
    return pthread_cond_signal( condition ) ;
 }
 
+// wait on a condition (and lock) ...
 int q_wait( Cond_t *condition, Lock_t *lock )
 {
    return pthread_cond_wait( condition, lock ) ;
 }
 
+// number of items in the queue ...
 int q_qty( Queue_t *Q )
 {
   return Q->head - Q->tail ;
 }
 
+// room available in the queue ...
 int q_avail( Queue_t *Q )
 {
   return Q->size - q_qty( Q ) ;
 }
 
+// is the queue empty ? 1 : 0 ... 
 int q_empty( Queue_t *Q )
 {
   return q_avail( Q ) == Q->size ;
 }
 
+// is the queue full ? 1 : 0  ... 
 int q_full( Queue_t *Q )
 {
    return q_avail( Q ) < 1 ;
@@ -59,6 +68,7 @@ int q_full( Queue_t *Q )
   -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 */
 
+// create a Queue_t structure ...
 Queue_t *q_create( int size, Func_t *siva )
 {
    Queue_t *rv ;
@@ -82,6 +92,7 @@ Queue_t *q_create( int size, Func_t *siva )
    return rv ;
 }
 
+// destroy a Queue_t structure ...
 Queue_t *q_destroy( Queue_t * Q )
 {
   if( !isNul( Q ) )
@@ -100,6 +111,7 @@ Queue_t *q_destroy( Queue_t * Q )
   return (Queue_t *) NULL ;
 }
 
+// push a task onto the queue ...
 int q_push( Queue_t *Q, void *T )
 {
    int rv ; 
@@ -115,6 +127,7 @@ int q_push( Queue_t *Q, void *T )
    return rv ;
 }
 
+// pop the least recently added task off the queue ...
 void *q_pop( Queue_t *Q )
 {
   void *rv ;
@@ -127,6 +140,18 @@ void *q_pop( Queue_t *Q )
 
   q_signal( Q->is_full ) ;
   q_unlock( Q ) ;
+
+  return rv ;
+}
+
+// get the number of elements in the queue (maybe) ...
+int q_size( Queue_t *Q )
+{
+  int rv = -1 ;
+
+  q_lock( Q );
+  rv = q_qty( Q ) ;
+  q_unlock( Q );
 
   return rv ;
 }
