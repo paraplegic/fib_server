@@ -85,6 +85,7 @@ int main( int argc, char **argv )
    printf( "misses:\t%d\n", mikes ) ;
    printf( "Q size: %d N threads: %d\n", Q_SIZE, N_THREADS ) ;
 
+   while( q_size( inp_Q ) ) ;
    inp_Q = q_destroy( inp_Q ) ;
    exit( 0 ) ;
 }
