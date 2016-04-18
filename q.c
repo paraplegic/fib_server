@@ -17,25 +17,49 @@
 // unlock the Q ...
 int q_unlock( Queue_t *Q )
 {
-   return pthread_mutex_unlock( Q->lock ) ;
+   int nx ;
+   nx = pthread_mutex_unlock( Q->lock ) ;
+   if( nx != 0 )
+   {
+      printf( "Mutex UN-lock returned %d.\n", nx ) ; 
+   }
+   return nx ;
 }
 
 // lock the Q ...
 int q_lock( Queue_t *Q )
 {
-   return pthread_mutex_lock( Q->lock ) ;
+   int nx ;
+   nx = pthread_mutex_lock( Q->lock ) ;
+   if( nx != 0 )
+   {
+      printf( "Mutex lock returned %d.\n", nx ) ; 
+   }
+   return nx ;
 }
 
 // signal a thread waiting on a condition variable ...
 int q_signal( Cond_t *condition )
 {
-   return pthread_cond_signal( condition ) ;
+  int nx ;
+  nx = pthread_cond_signal( condition ) ;
+  if( nx != 0 )
+  {
+      printf( "Condition signal returned %d.\n", nx ) ; 
+  }
+  return nx;
 }
 
 // wait on a condition (and lock) ...
 int q_wait( Cond_t *condition, Lock_t *lock )
 {
-   return pthread_cond_wait( condition, lock ) ;
+   int nx ;
+   nx = pthread_cond_wait( condition, lock ) ;
+   if( nx != 0 )
+   {
+      printf( "Condition wait returned %d.\n", nx ) ; 
+   }
+   return nx;
 }
 
 // number of items in the queue ...
@@ -95,11 +119,16 @@ Queue_t *q_create( int size, Func_t *siva )
 // destroy a Queue_t structure ...
 Queue_t *q_destroy( Queue_t * Q )
 {
+  int n = 0 ;
   if( !isNul( Q ) )
   {
     if( !isNul( Q->siva ) )
     {
-       while( !q_empty( Q ) ) Q->siva( q_pop( Q ) ) ;
+       while( !q_empty( Q ) )
+       {
+          Q->siva( q_pop( Q ) ) ;
+          n++ ;
+       }
     }
     if( !isNul( Q->lock ) ) free( Q->lock ) ;
     if( !isNul( Q->is_empty ) ) free( Q->is_empty ) ;
@@ -107,6 +136,10 @@ Queue_t *q_destroy( Queue_t * Q )
     if( !isNul( Q->task ) ) free( Q->task ) ;
     memset( Q, 0, sizeof( Queue_t ) ) ;
     free( Q ) ;
+  }
+  if( n > 0 )
+  {
+    printf( "WARNING: %d items lost in Queue.\n", n ) ; 
   }
   return (Queue_t *) NULL ;
 }

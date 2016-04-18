@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 typedef pthread_mutex_t Lock_t ;
 typedef pthread_cond_t Cond_t ;
