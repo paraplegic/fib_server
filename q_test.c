@@ -6,7 +6,8 @@
 #define rqst_EXIT	-1
 #define FOREVER		(1 == 1)
 #define Q_SIZE		512
-#define N_THREADS	4
+#define N_THREADS	6
+#define SLEEP		4
 
 // must have usage info ...
 void usage( int argc, char **argv )
@@ -46,12 +47,15 @@ int main( int argc, char **argv )
         exit( 1 ) ; 
      }
    }
+   printf( "Sleeping for %d seconds to synch %d threads.\n", SLEEP, N_THREADS ) ;
+   sleep( SLEEP ); 
 
    // the main worker queue is filled here ... 
    for( cx = 0 ; cx < max ; cx++ )
    {
       // the task_crt does a malloc of a structure ...
       q_push( inp_Q, task_crt( 0, rqst_CONTINUE, -1 ) ) ;
+//      printf( "+" ) ;
    }
 
    // tell the threads to exit ... 
@@ -85,7 +89,6 @@ int main( int argc, char **argv )
    printf( "misses:\t%d\n", mikes ) ;
    printf( "Q size: %d N threads: %d\n", Q_SIZE, N_THREADS ) ;
 
-   while( q_size( inp_Q ) ) ;
    inp_Q = q_destroy( inp_Q ) ;
    exit( 0 ) ;
 }
@@ -111,6 +114,7 @@ void *cx_read_task( void *arg )
     {
       printf( "Null task detected in thread %d.\n", thread ) ;
       mike[thread] += 1;
+      pthread_exit( (void *) NULL ) ; 
       continue ;
     }
 
@@ -120,10 +124,10 @@ void *cx_read_task( void *arg )
       printf( "Thread %d terminated.\n", thread ) ;
       pthread_exit( (void *) NULL ) ; 
     }
-    bucket[thread] += 1;
 
-    // free's the structure 
+    // free's the structure, and count the trial ...
     T = task_del( T ) ;
+    bucket[thread] += 1;
   }
   pthread_exit( (void *) NULL ) ; 
   return (void *) NULL ;

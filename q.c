@@ -62,6 +62,9 @@ int q_wait( Cond_t *condition, Lock_t *lock )
    return nx;
 }
 
+// note the routines below can only be used when the
+// data structure is locked, or mayhem may result.
+
 // number of items in the queue ...
 int q_qty( Queue_t *Q )
 {
@@ -119,15 +122,20 @@ Queue_t *q_create( int size, Func_t *siva )
 // destroy a Queue_t structure ...
 Queue_t *q_destroy( Queue_t * Q )
 {
-  int n = 0 ;
+  while( q_lock( Q ) );
   if( !isNul( Q ) )
   {
     if( !isNul( Q->siva ) )
     {
+       int n = 0 ;
        while( !q_empty( Q ) )
        {
           Q->siva( q_pop( Q ) ) ;
           n++ ;
+       }
+       if( n > 0 )
+       {
+           printf( "WARNING: %d items lost in Queue.\n", n ) ; 
        }
     }
     if( !isNul( Q->lock ) ) free( Q->lock ) ;
@@ -137,10 +145,6 @@ Queue_t *q_destroy( Queue_t * Q )
     memset( Q, 0, sizeof( Queue_t ) ) ;
     free( Q ) ;
   }
-  if( n > 0 )
-  {
-    printf( "WARNING: %d items lost in Queue.\n", n ) ; 
-  }
   return (Queue_t *) NULL ;
 }
 
@@ -148,7 +152,7 @@ Queue_t *q_destroy( Queue_t * Q )
 int q_push( Queue_t *Q, void *T )
 {
    int rv ; 
-   q_lock( Q );
+   while( q_lock( Q ) );
    while( q_full( Q ) ) q_wait( Q->is_full, Q->lock ) ;
 
    Q->task[Q->head] = T ;
@@ -156,7 +160,7 @@ int q_push( Queue_t *Q, void *T )
    rv = q_qty( Q );
    
    q_signal( Q->is_empty ) ;
-   q_unlock( Q ) ;
+   while( q_unlock( Q ) ) ;
    return rv ;
 }
 
@@ -164,7 +168,7 @@ int q_push( Queue_t *Q, void *T )
 void *q_pop( Queue_t *Q )
 {
   void *rv ;
-  q_lock( Q ); 
+  while( q_lock( Q ) ) ; 
   while( q_empty( Q ) ) q_wait( Q->is_empty, Q->lock ) ; 
 
   rv = Q->task[ Q->tail ] ;
@@ -172,7 +176,7 @@ void *q_pop( Queue_t *Q )
   Q->tail = INCR( Q, Q->tail ) ;
 
   q_signal( Q->is_full ) ;
-  q_unlock( Q ) ;
+  while( q_unlock( Q ) ) ;
 
   return rv ;
 }
@@ -182,9 +186,9 @@ int q_size( Queue_t *Q )
 {
   int rv = -1 ;
 
-  q_lock( Q );
+  while( q_lock( Q ) ) ;
   rv = q_qty( Q ) ;
-  q_unlock( Q );
+  while( q_unlock( Q ) ) ;
 
   return rv ;
 }
