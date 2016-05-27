@@ -6,7 +6,7 @@
 #define rqst_EXIT	-1
 #define FOREVER		(1 == 1)
 #define Q_SIZE		512
-#define N_THREADS	6
+#define N_THREADS	8
 #define SLEEP		4
 
 // must have usage info ...
@@ -101,6 +101,7 @@ void *cx_read_task( void *arg )
   thread = (long) arg ;
   bucket[thread] = 0 ;
 
+  printf( "Thread %d STARTED.\n", thread ) ;
   while( FOREVER )
   {
     if( isNul( inp_Q ) )
@@ -121,7 +122,7 @@ void *cx_read_task( void *arg )
     if( T->request == rqst_EXIT )
     {
       T = task_del( T ) ;
-      printf( "Thread %d terminated.\n", thread ) ;
+      printf( "Thread %d TERMINATED.\n", thread ) ;
       pthread_exit( (void *) NULL ) ; 
     }
 
