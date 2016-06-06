@@ -10,6 +10,8 @@
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <netinet/in.h>
+#include <netdb.h>
+#include <signal.h>
 
 #ifndef FD_SETSIZE
   #define FD_SETSIZE	1024
@@ -38,5 +40,7 @@ int cx_next( int wk_socket );
 int cx_read( int client );
 int cx_write( int client, int value );
 int cx_bad( int client, char *msg, int val ) ;
+int cx_open( char *host, char *port ) ;
+int cx_close( int sckt ) ;
 
 #endif // FIB_INCLUDED

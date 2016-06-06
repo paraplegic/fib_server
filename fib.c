@@ -23,6 +23,7 @@ void usage( int argc, char **argv )
 // general output routine ...
 void cx_info( char *msg, int data )
 {
+   perror( "system reports:" );
    printf( msg, data ) ;
    fflush( stdout ) ;
    return ;
@@ -54,11 +55,18 @@ fd_set fd_write ;
 int    fd_num = 0 ; 
 struct timeval tm_out ;
 
+typedef enum {
+  Unused = -1,
+  Closed =  0,
+  Active =  1
+} Client_State_t ;
+
 //
 // each client gets it's own file descriptor and stream socket ...
 int n_clients = 0 ; 
-int clients[FD_SETSIZE] = {-1} ; 
-#define c_push( client )	clients[n_clients] = (n_clients < FD_SETSIZE) ? client : cx_die( "client buffer overflow" ); n_clients++
+Client_State_t clients[FD_SETSIZE] = {Unused} ; 
+#define client_add( client )	clients[client] = Active ; n_clients = client 
+#define client_del( client )	clients[client] = Closed ; n_clients--
 
 //
 // work moves from select() to the input queue, and
@@ -67,45 +75,9 @@ int clients[FD_SETSIZE] = {-1} ;
 Queue_t *inp_Q = (Queue_t *) NULL ;
 Queue_t *wrk_Q = (Queue_t *) NULL ;
 
-int main( int argc, char **argv )
+int cx_setsignals( void )
 {
-   int wk_socket, cx ;
-   pthread_t *threads[10];
-
-   if( argc < 2 )
-   {
-     usage( argc, argv ) ;
-   }
-
-   // input and work queues created here ...
-   inp_Q = q_create( 128, (Func_t *) task_del ) ;
-   wrk_Q = q_create( 128, (Func_t *) task_del ) ;
-
-   cx = 0 ; 
-   // just a few worker threads: 2 readers and 3 writers ... 
-   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_read_task, NULL ) ;
-   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_read_task, NULL ) ;
-   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_write_task, NULL ) ;
-   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_write_task, NULL ) ;
-   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_write_task, NULL ) ;
-
-   // if this returns, it should be a good socket, on a well known port
-   // as provided at run time as an argument ... should be > 1024 ... 
-   cx_info( "Starting service on port %d: ", atol( argv[1] ) ) ; 
-   wk_socket = cx_wellknown( atol( argv[1] ) ) ;
-   cx_info( "Done.\n", 0 ) ; 
-   while( FOREVER )
-   {
-      cx_server( wk_socket ) ;
-   }
-
-   // no mechanism is available yet to shut down this server ...
-   // but we should design that in, and if so, clean up the queues,
-   // flush and close the clients, and in general .. clean up ...
-   inp_Q = q_destroy( inp_Q ) ;
-   wrk_Q = q_destroy( wrk_Q ) ;
-   cx_info( "Unexpected server return.\n", 0 ) ; 
-   exit( 1 ) ;
+   signal( SIGPIPE, SIG_IGN ) ;
 }
 
 int cx_server( int wk_socket )
@@ -117,13 +89,17 @@ int cx_server( int wk_socket )
 
   max = 0 ; 
   FD_ZERO( &fd_read ) ; 
-  for( fd = 0 ; fd < n_clients ; fd++ )
+  for( fd = 0 ; fd < FD_SETSIZE; fd++ )
   {
-    FD_SET( clients[fd], &fd_read ) ;
-    if( clients[fd] > max )
-         max = clients[fd] ;
+    if( clients[fd] == Active )
+    {
+      FD_SET( fd, &fd_read ) ;
+    }
+    if( fd > max )
+         max = fd ;
   }
 
+  cx_info( "%d ", max ) ;
   fd_num = max+1 ;
   rv = select( fd_num, &fd_read, NULL, NULL, &tm_out ) ;
   if( rv < 0 )
@@ -138,9 +114,9 @@ int cx_server( int wk_socket )
     cx_client_add( cx ) ; 
   } 
 
-  for( fd = 1 ; fd < n_clients ; fd++ )
+  for( fd = 0 ; fd < n_clients ; fd++ )
   {
-      if( FD_ISSET( clients[fd], &fd_read ) )
+      if( FD_ISSET( fd, &fd_read ) )
       {
          q_push( inp_Q, task_crt( clients[fd], -1, -1 ) ) ;
       }
@@ -168,7 +144,7 @@ void *cx_write_task( void *arg )
     } else 
         cx_bad( T->client, "server refused fib(%d) (too large).\n", T->request ) ;
 
-    task_print( T ) ;
+//    task_print( T ) ;
     T = task_del( T ) ; 
   }
 }
@@ -184,7 +160,7 @@ void *cx_read_task( void *arg )
       continue ;
 
     T->request = cx_read( T->client ) ;
-    task_print( T ) ;
+//    task_print( T ) ;
 
     q_push( wrk_Q, T ) ;
   }
@@ -195,10 +171,16 @@ int cx_client_died( int client )
   return cx_client_del( client ) ;
 }
 
+int cx_close( int client )
+{
+  return cx_client_del( client );
+}
+
 int cx_client_del( int client )
 {
-  int nx ;
+  int i, nx ;
 
+  cx_info( "closing file on socket %d.\n", client ) ;
   nx = close( client ); 
   if( nx < 0 )
   {
@@ -213,6 +195,7 @@ int cx_client_del( int client )
         break ;
     }
   }
+  client_del( client );
   return 1;
 }
 
@@ -253,7 +236,9 @@ int cx_wellknown( int port )
    {
      cx_die( "ERROR on listen" );
    }
-   c_push( rv ) ;
+
+   cx_setsignals() ;
+   client_add( rv ) ;
    return rv ;
 }
 
@@ -269,7 +254,7 @@ int cx_next( int wk_socket )
   {
     cx_die( "ERROR on accept" ) ;
   }
-  c_push( rv ) ;
+  client_add( rv ) ;
   return rv ;
 }
 
@@ -284,7 +269,8 @@ int cx_read( int client )
   nx = read( client, buf, sizeof( buf ) );
   if( nx < 0 )
   {
-    if( errno == EAGAIN ) goto again;
+    if( errno == EAGAIN ) 
+        goto again;
     cx_die( "ERROR on read from client" ) ;
   }
 
@@ -300,7 +286,7 @@ int cx_read( int client )
 int cx_write( int client, int value )
 {
   char buf[buf_SIZE];
-  int nx ;
+  int i, nx ;
 
   bzero( buf, sizeof( buf ) ) ;
   nx = snprintf( buf, sizeof( buf ), "%u\n", value ) ;
@@ -312,6 +298,14 @@ int cx_write( int client, int value )
     {
       if( errno == EAGAIN ) goto again;
       cx_die( "ERROR on write to client" ) ;
+    }
+    if( nx == 0 )
+    {
+      cx_close( client ) ;
+      if( errno == EPIPE )
+      {
+        cx_info( "EPIPE detected on descriptor %d", client ) ;
+      }
     }
   } 
   return nx ;
@@ -335,3 +329,86 @@ int cx_bad( int client, char *msg, int val )
   } 
   return nx ;
 }
+
+int cx_open( char *host, char *u_port )
+{
+    int rv, port ;
+    struct sockaddr_in serv_addr;
+    struct hostent *server;
+
+    port = atol( u_port );
+    if( port < 0 )
+    {
+        printf( "ERROR illegal port specified: %s\n", u_port );
+    }
+
+    rv = socket(AF_INET, SOCK_STREAM, 0);
+    if ( rv < 0 )
+    {
+        printf( "ERROR opening socket\n" );
+    }
+
+    server = gethostbyname( host );
+    if( isNul( server ) ) {
+        printf( "ERROR, no such host\n");
+    }
+
+    bzero((char *) &serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    bcopy( (char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
+    serv_addr.sin_port = htons(port);
+    if( connect( rv, (struct sockaddr *) &serv_addr, sizeof( serv_addr ) ) < 0 )
+    {
+        printf("ERROR connectingi\n");
+    }
+
+    cx_setsignals() ;
+    return rv ;
+
+}
+
+#ifdef TEST
+
+int main( int argc, char **argv )
+{
+   int wk_socket, cx ;
+   pthread_t *threads[10];
+
+   if( argc < 2 )
+   {
+     usage( argc, argv ) ;
+   }
+
+   // input and work queues created here ...
+   inp_Q = q_create( 128, (Func_t *) task_del ) ;
+   wrk_Q = q_create( 128, (Func_t *) task_del ) ;
+
+   // just a few worker threads: 2 readers and 3 writers ... 
+   cx = 0 ; 
+   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_read_task, NULL ) ;
+   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_read_task, NULL ) ;
+   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_read_task, NULL ) ;
+   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_write_task, NULL ) ;
+   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_write_task, NULL ) ;
+   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_write_task, NULL ) ;
+
+   // if this returns, it should be a good socket, on a well known port
+   // as provided at run time as an argument ... should be > 1024 ... 
+   cx_info( "Starting service on port %d: ", atol( argv[1] ) ) ; 
+   wk_socket = cx_wellknown( atol( argv[1] ) ) ;
+   cx_info( "Done.\n", 0 ) ; 
+   while( FOREVER )
+   {
+      cx_server( wk_socket ) ;
+   }
+
+   // no mechanism is available yet to shut down this server ...
+   // but we should design that in, and if so, clean up the queues,
+   // flush and close the clients, and in general .. clean up ...
+   inp_Q = q_destroy( inp_Q ) ;
+   wrk_Q = q_destroy( wrk_Q ) ;
+   cx_info( "Unexpected server return.\n", 0 ) ; 
+   exit( 1 ) ;
+}
+
+#endif /* TEST */
