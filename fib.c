@@ -1,6 +1,7 @@
 #include "fib.h"
 #include "task.h"
 #include "q.h"
+#include "lst.h"
 
 // an (intentionally) inefficient fib generator which 
 // moves very slowly beyond input number 44 ... and time
@@ -54,6 +55,8 @@ fd_set fd_read  ;
 fd_set fd_write ;
 int    fd_num = 0 ; 
 struct timeval tm_out ;
+
+
 
 typedef enum {
   Unused = -1,

@@ -7,8 +7,8 @@ CCOPTS=-g
 
 all:	$(EXES)
 
-fib:	fib.c task.o q.o
-	$(CC) $(CCOPTS) -DTEST fib.c -o $@ task.o q.o -pthread
+fib:	fib.c task.o q.o lst.o
+	$(CC) $(CCOPTS) -DTEST fib.c -o $@ task.o q.o lst.o -pthread
 	size $@
 
 task.o:	task.c task.h
@@ -19,6 +19,9 @@ fib.o:	fib.c fib.h
 
 q.o:	q.c q.h
 	$(CC) $(CCOPTS) -c q.c
+
+lst.o:	lst.c lst.h
+	$(CC) $(CCOPTS) -c lst.c
 
 clean:
 	rm -rf $(EXES) *.o
