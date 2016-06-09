@@ -18,11 +18,10 @@ int main( int argc, char **argv )
     usage();
   }
 
-  cx_init( argc, argv ) ;
-
   u_host = argv[1];
   u_port = argv[2];
 
+  cx_init( argc, argv ) ;
   host = cx_open( u_host, u_port );
   if( host < 0 )
   {
