@@ -102,7 +102,7 @@ int     lst_add( List_t *List, void *val )
    if( List ->argc < List->argsz )
    {
        List->argv[ List->argc++ ] = val ;
-       return 1 ;
+       return List->argc ;
    } 
 
    newsz = ( List->argsz > Kilo( 1 ) ) ?  (int)( List->argsz * 1.2 ) : (int) (List->argsz * 2) ;

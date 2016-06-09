@@ -21,10 +21,18 @@ void usage( int argc, char **argv )
    exit( 1 ) ;
 }
 
+
+char *program_name = (char *) NULL ;
+
+void cx_init( int argc, char **argv )
+{
+  program_name = argv[0] ; 
+}
+
 // general output routine ...
 void cx_info( char *msg, int data )
 {
-   perror( "system reports:" );
+   printf( "%s: ", program_name ) ;
    printf( msg, data ) ;
    fflush( stdout ) ;
    return ;
@@ -33,6 +41,7 @@ void cx_info( char *msg, int data )
 // error message routine ...
 int cx_error( char *msg )
 {
+   printf( "%s: ", program_name ) ;
    perror( msg );
    fflush( stdout ) ;
    fflush( stderr ) ;
@@ -56,20 +65,9 @@ fd_set fd_write ;
 int    fd_num = 0 ; 
 struct timeval tm_out ;
 
-
-
-typedef enum {
-  Unused = -1,
-  Closed =  0,
-  Active =  1
-} Client_State_t ;
-
 //
 // each client gets it's own file descriptor and stream socket ...
-int n_clients = 0 ; 
-Client_State_t clients[FD_SETSIZE] = {Unused} ; 
-#define client_add( client )	clients[client] = Active ; n_clients = client 
-#define client_del( client )	clients[client] = Closed ; n_clients--
+List_t *client_list = (List_t *) NULL ;
 
 //
 // work moves from select() to the input queue, and
@@ -85,24 +83,22 @@ int cx_setsignals( void )
 
 int cx_server( int wk_socket )
 {
-  int fd, max, cx, rv = -1 ;
+  int fd, max, mx, cx, rv = -1 ;
 
   tm_out.tv_sec  = 5 ;
   tm_out.tv_usec = 0 ;
 
   max = 0 ; 
+  mx = lst_siz( client_list ) ; 
   FD_ZERO( &fd_read ) ; 
-  for( fd = 0 ; fd < FD_SETSIZE; fd++ )
+  for( cx = 0 ; cx < mx; cx++ )
   {
-    if( clients[fd] == Active )
-    {
-      FD_SET( fd, &fd_read ) ;
-    }
+    fd = (int) lst_get( client_list, cx ); 
+    FD_SET( fd, &fd_read ) ;
     if( fd > max )
          max = fd ;
   }
 
-  cx_info( "%d ", max ) ;
   fd_num = max+1 ;
   rv = select( fd_num, &fd_read, NULL, NULL, &tm_out ) ;
   if( rv < 0 )
@@ -114,14 +110,15 @@ int cx_server( int wk_socket )
   if( FD_ISSET( wk_socket, &fd_read ) )
   {
     cx = cx_next( wk_socket ) ;
-    cx_client_add( cx ) ; 
   } 
 
-  for( fd = 0 ; fd < n_clients ; fd++ )
+  mx = lst_siz( client_list ) ;
+  for( cx = 1 ; cx < mx ; cx++ )
   {
+      fd = (int) lst_get( client_list, cx ) ;
       if( FD_ISSET( fd, &fd_read ) )
       {
-         q_push( inp_Q, task_crt( clients[fd], -1, -1 ) ) ;
+         q_push( inp_Q, task_crt( fd, -1, -1 ) ) ;
       }
   }
 
@@ -183,6 +180,14 @@ int cx_client_del( int client )
 {
   int i, nx ;
 
+  nx = lst_fnd( client_list, (void *) client ) ;
+  if( ! nx < 0 )
+    lst_del( client_list, nx ) ;
+  else {
+     cx_info( "ignoring request to close socket %d. (already closed)\n", client ) ;
+     return 0 ;
+  }
+
   cx_info( "closing file on socket %d.\n", client ) ;
   nx = close( client ); 
   if( nx < 0 )
@@ -191,21 +196,22 @@ int cx_client_del( int client )
       case EIO:
       case EBADF:
         cx_info( "ERROR closing file on socket %d.\n", client ) ;
-        cx_die( "ERROR closing file" ) ;
         break ;
       case EINTR:
       default:
         break ;
     }
   }
-  client_del( client );
   return 1;
 }
 
 int cx_client_add( int client )
 {
-  cx_info( "adding client: %d.\n", client ) ;
-  return 1; 
+  if( isNul( client_list ) )
+  {
+      client_list = lst_crt( 20, NULL ) ;
+  }
+  return (int) lst_add( client_list, (void *) client ) ;
 }
 
 /* open a socket on a well known port (all interfaces) */
@@ -241,7 +247,7 @@ int cx_wellknown( int port )
    }
 
    cx_setsignals() ;
-   client_add( rv ) ;
+   cx_client_add( rv ) ;
    return rv ;
 }
 
@@ -257,7 +263,7 @@ int cx_next( int wk_socket )
   {
     cx_die( "ERROR on accept" ) ;
   }
-  client_add( rv ) ;
+  cx_client_add( rv ) ;
   return rv ;
 }
 
@@ -300,7 +306,8 @@ int cx_write( int client, int value )
     if( nx < 0 )
     {
       if( errno == EAGAIN ) goto again;
-      cx_die( "ERROR on write to client" ) ;
+      cx_info( "ERROR on write to client %d\n", client ) ;
+      cx_die( "ERROR not recoverable.\n" ) ;
     }
     if( nx == 0 )
     {
@@ -339,21 +346,25 @@ int cx_open( char *host, char *u_port )
     struct sockaddr_in serv_addr;
     struct hostent *server;
 
+    rv = -1 ;
     port = atol( u_port );
     if( port < 0 )
     {
         printf( "ERROR illegal port specified: %s\n", u_port );
+        return rv ;
     }
 
     rv = socket(AF_INET, SOCK_STREAM, 0);
     if ( rv < 0 )
     {
-        printf( "ERROR opening socket\n" );
+        printf( "ERROR opening socket to %s:%d\n", host, port );
+        return rv ;
     }
 
     server = gethostbyname( host );
     if( isNul( server ) ) {
-        printf( "ERROR, no such host\n");
+        printf( "ERROR, gethost such host %s:%d\n", host, port );
+        return rv ;
     }
 
     bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -362,7 +373,7 @@ int cx_open( char *host, char *u_port )
     serv_addr.sin_port = htons(port);
     if( connect( rv, (struct sockaddr *) &serv_addr, sizeof( serv_addr ) ) < 0 )
     {
-        printf("ERROR connectingi\n");
+        printf("ERROR connecting to %s:%d.\n", host, port );
     }
 
     cx_setsignals() ;
@@ -381,6 +392,8 @@ int main( int argc, char **argv )
    {
      usage( argc, argv ) ;
    }
+
+   cx_init( argc, argv ) ; 
 
    // input and work queues created here ...
    inp_Q = q_create( 128, (Func_t *) task_del ) ;

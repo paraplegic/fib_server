@@ -18,6 +18,8 @@ int main( int argc, char **argv )
     usage();
   }
 
+  cx_init( argc, argv ) ;
+
   u_host = argv[1];
   u_port = argv[2];
 

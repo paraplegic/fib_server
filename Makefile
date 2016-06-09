@@ -8,7 +8,7 @@ CCOPTS=-g
 all:	$(EXES)
 
 fib:	fib.c task.o q.o lst.o
-	$(CC) $(CCOPTS) -DTEST fib.c -o $@ task.o q.o lst.o -pthread
+	$(CC) $(CCOPTS) -DTEST fib.c -pthread -o $@ task.o q.o lst.o
 	size $@
 
 task.o:	task.c task.h
@@ -37,8 +37,8 @@ q_test:	q_test.c q.o task.o
 client.o:	client.c
 	$(CC) $(CCOPTS) -c client.c
 
-client:	client.o fib.o task.o client.o
-	$(CC) $(CCOPTS) client.o task.o fib.o q.o -o client
+client:	client.o fib.o task.o client.o lst.o
+	$(CC) $(CCOPTS) client.o task.o fib.o q.o lst.o -o client
 
 test:	q_test
 	time ./q_test 10000000
