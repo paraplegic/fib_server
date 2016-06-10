@@ -2,6 +2,7 @@
 
 //
 // create a list of hint items, destroyed by the destructor ...
+// ---------------------------------------------------------
 List_t *lst_crt( int hint, Code_t destructor )
 {
   List_t *rv = (List_t *) NULL;
@@ -19,6 +20,7 @@ List_t *lst_crt( int hint, Code_t destructor )
 
 //
 // destroy that list ...
+// ---------------------------------------------------------
 List_t *lst_dst( List_t *List )
 {
    int i ; 
@@ -42,6 +44,7 @@ List_t *lst_dst( List_t *List )
 
 //
 // return the current number of items in list ...
+// ---------------------------------------------------------
 int lst_siz( List_t *List )
 {
    if( !isNul( List ) )
@@ -52,6 +55,7 @@ int lst_siz( List_t *List )
 
 //
 // return the capacity of list ...
+// ---------------------------------------------------------
 int lst_cap( List_t *List )
 {
    if( !isNul( List ) )
@@ -62,6 +66,7 @@ int lst_cap( List_t *List )
 
 //
 // return the index(th) item in list ...
+// ---------------------------------------------------------
 void *lst_get( List_t *List, int index )
 {
    if( index < List->argsz )
@@ -73,6 +78,7 @@ void *lst_get( List_t *List, int index )
 
 //
 // delete the index(th) item in list ...
+// ---------------------------------------------------------
 int lst_del( List_t *List, int index )
 {
    int i ;
@@ -95,6 +101,7 @@ int lst_del( List_t *List, int index )
 
 //
 // lookup a value in the list and return the index | -1 ... 
+// ---------------------------------------------------------
 int lst_fnd( List_t *List, void *val )
 {
    int i ;
@@ -112,6 +119,7 @@ int lst_fnd( List_t *List, void *val )
 
 //
 // search each object using a user specified comparison routine ...
+// ---------------------------------------------------------
 int lst_lkp( List_t *List, Code_t compare, void *Key )
 {
    int i ; 
@@ -128,6 +136,7 @@ int lst_lkp( List_t *List, Code_t compare, void *Key )
 
 //
 // add an item to the list regardless of capacity ...
+// ---------------------------------------------------------
 int lst_add( List_t *List, void *val )
 {
    int newsz ;
@@ -146,6 +155,7 @@ int lst_add( List_t *List, void *val )
 
 //
 // used internally to quietly expand the list ... 
+// ---------------------------------------------------------
 int lst_exp( List_t *List, int newsz )
 {
    int i, tmp ; 
