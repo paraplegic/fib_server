@@ -4,18 +4,19 @@ BKUP=fib_server.tgz
 EXES=fib q_test client
 CC=gcc
 CCOPTS=-g
+NOWARN=-Wno-pointer-to-int-cast -Wno-int-to-pointer-cast
 
 all:	$(EXES)
 
 fib:	fib.c task.o q.o lst.o
-	$(CC) $(CCOPTS) -DTEST fib.c -pthread -o $@ task.o q.o lst.o
+	$(CC) $(CCOPTS) $(NOWARN) -DTEST fib.c -pthread -o $@ task.o q.o lst.o
 	size $@
 
 task.o:	task.c task.h
 	$(CC) $(CCOPTS) -c task.c
 
 fib.o:	fib.c fib.h
-	$(CC) $(CCOPTS) -c fib.c
+	$(CC) $(CCOPTS) $(NOWARN) -c fib.c
 
 q.o:	q.c q.h
 	$(CC) $(CCOPTS) -c q.c

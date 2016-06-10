@@ -122,9 +122,9 @@ Queue_t *q_create( int size, Func_t *siva )
 // destroy a Queue_t structure ...
 Queue_t *q_destroy( Queue_t * Q )
 {
-  while( q_lock( Q ) );
   if( !isNul( Q ) )
   {
+    while( q_lock( Q ) );
     if( !isNul( Q->siva ) )
     {
        int n = 0 ;

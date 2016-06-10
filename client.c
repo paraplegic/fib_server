@@ -3,8 +3,9 @@
 #include "fib.h"
 #include "q.h"
 
-#define N_TRYS	1024
+#define N_TRYS	20480
 #define FIB_MAX	  40
+#define MYFIB	  10
 
 int main( int argc, char **argv )
 {
@@ -33,14 +34,14 @@ int main( int argc, char **argv )
   for( i = 0 ; i < N_TRYS ; i++ )
   {
      start = task_now() ;
-     cx_write( host, 20 );
+     cx_write( host, MYFIB );
      fib = cx_read( host );
      end = task_now() ;
-     printf( "%d ", fib ) ;
+//     printf( "%d ", fib ) ;
 
      latency += (double) end - (double) start ;
   }
-  printf( "\n" ) ;
+//  printf( "\n" ) ;
   cx_close( host );
   t_end = task_now() ;
   latency = latency / N_TRYS ;

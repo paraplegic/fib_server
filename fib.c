@@ -181,13 +181,10 @@ int cx_client_del( int client )
   int i, nx ;
 
   nx = lst_fnd( client_list, (void *) client ) ;
-  if( ! nx < 0 )
-    lst_del( client_list, nx ) ;
-  else {
-     cx_info( "ignoring request to close socket %d. (already closed)\n", client ) ;
+  if( nx < 0 )
      return 0 ;
-  }
 
+  lst_del( client_list, nx ) ;
   cx_info( "closing file on socket %d.\n", client ) ;
   nx = close( client ); 
   if( nx < 0 )
@@ -205,6 +202,7 @@ int cx_client_del( int client )
   return 1;
 }
 
+// client_list is a global list ... 
 int cx_client_add( int client )
 {
   if( isNul( client_list ) )
@@ -261,7 +259,8 @@ int cx_next( int wk_socket )
   rv = accept( wk_socket, (struct sockaddr *) &client, (socklen_t *) &siz );
   if( rv < 0 )
   {
-    cx_die( "ERROR on accept" ) ;
+//    cx_die( "ERROR on accept" ) ;
+    return rv ;
   }
   cx_client_add( rv ) ;
   return rv ;
@@ -280,7 +279,7 @@ int cx_read( int client )
   {
     if( errno == EAGAIN ) 
         goto again;
-    cx_die( "ERROR on read from client" ) ;
+    return nx ;
   }
 
   if( nx == 0 )
@@ -305,9 +304,8 @@ int cx_write( int client, int value )
     nx = write( client, buf, strlen( buf ) ) ;
     if( nx < 0 )
     {
-      if( errno == EAGAIN ) goto again;
-      cx_info( "ERROR on write to client %d\n", client ) ;
-      cx_die( "ERROR not recoverable.\n" ) ;
+      if( errno == EAGAIN ) 
+          goto again;
     }
     if( nx == 0 )
     {
@@ -333,8 +331,8 @@ int cx_bad( int client, char *msg, int val )
     nx = write( client, buf, strlen( buf ) ) ;
     if( nx < 0 )
     {
-      if( errno == EAGAIN ) goto again;
-      cx_die( "ERROR on write to client" ) ;
+      if( errno == EAGAIN ) 
+           goto again;
     }
   } 
   return nx ;
@@ -404,6 +402,8 @@ int main( int argc, char **argv )
    pthread_create( (pthread_t *) &threads[cx++], NULL, cx_read_task, NULL ) ;
    pthread_create( (pthread_t *) &threads[cx++], NULL, cx_read_task, NULL ) ;
    pthread_create( (pthread_t *) &threads[cx++], NULL, cx_read_task, NULL ) ;
+   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_read_task, NULL ) ;
+   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_write_task, NULL ) ;
    pthread_create( (pthread_t *) &threads[cx++], NULL, cx_write_task, NULL ) ;
    pthread_create( (pthread_t *) &threads[cx++], NULL, cx_write_task, NULL ) ;
    pthread_create( (pthread_t *) &threads[cx++], NULL, cx_write_task, NULL ) ;

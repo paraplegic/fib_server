@@ -1,5 +1,6 @@
 #include "lst.h"
 
+// create a list of hint items, destroyed by the destructor ...
 List_t *lst_crt( int hint, Code_t destructor )
 {
   List_t *rv = (List_t *) NULL;
@@ -15,6 +16,7 @@ List_t *lst_crt( int hint, Code_t destructor )
   return rv ;
 }
 
+// destroy that list ...
 List_t *lst_dst( List_t *List )
 {
    int i ; 
@@ -36,6 +38,7 @@ List_t *lst_dst( List_t *List )
    return List ;
 }
 
+// return the current number of items in list ...
 int lst_siz( List_t *List )
 {
    if( !isNul( List ) )
@@ -44,6 +47,7 @@ int lst_siz( List_t *List )
    return -1 ;
 }
 
+// return the capacity of list ...
 int lst_cap( List_t *List )
 {
    if( !isNul( List ) )
@@ -52,6 +56,7 @@ int lst_cap( List_t *List )
    return -1 ;
 }
 
+// return the index(th) item in list ...
 void   *lst_get( List_t *List, int index )
 {
    if( index < List->argsz )
@@ -61,6 +66,7 @@ void   *lst_get( List_t *List, int index )
    return (void *) NULL ;
 }
 
+// delete the index(th) item in list ...
 int     lst_del( List_t *List, int index )
 {
    int i ;
@@ -81,6 +87,7 @@ int     lst_del( List_t *List, int index )
    return -1 ;
 }
 
+// lookup a value in the list and return the index | -1 ... 
 int     lst_fnd( List_t *List, void *val )
 {
    int i ;
@@ -96,6 +103,7 @@ int     lst_fnd( List_t *List, void *val )
    return -1 ;
 }
 
+// add an item to the list regardless of capacity ...
 int     lst_add( List_t *List, void *val )
 {
    int newsz ;
@@ -112,6 +120,7 @@ int     lst_add( List_t *List, void *val )
    return -1 ;
 }
 
+// used internally to quietly expand the list ... 
 int     lst_exp( List_t *List, int newsz )
 {
    int i, tmp ; 
