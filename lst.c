@@ -1,5 +1,6 @@
 #include "lst.h"
 
+//
 // create a list of hint items, destroyed by the destructor ...
 List_t *lst_crt( int hint, Code_t destructor )
 {
@@ -16,6 +17,7 @@ List_t *lst_crt( int hint, Code_t destructor )
   return rv ;
 }
 
+//
 // destroy that list ...
 List_t *lst_dst( List_t *List )
 {
@@ -38,6 +40,7 @@ List_t *lst_dst( List_t *List )
    return List ;
 }
 
+//
 // return the current number of items in list ...
 int lst_siz( List_t *List )
 {
@@ -47,6 +50,7 @@ int lst_siz( List_t *List )
    return -1 ;
 }
 
+//
 // return the capacity of list ...
 int lst_cap( List_t *List )
 {
@@ -56,8 +60,9 @@ int lst_cap( List_t *List )
    return -1 ;
 }
 
+//
 // return the index(th) item in list ...
-void   *lst_get( List_t *List, int index )
+void *lst_get( List_t *List, int index )
 {
    if( index < List->argsz )
    {
@@ -66,8 +71,9 @@ void   *lst_get( List_t *List, int index )
    return (void *) NULL ;
 }
 
+//
 // delete the index(th) item in list ...
-int     lst_del( List_t *List, int index )
+int lst_del( List_t *List, int index )
 {
    int i ;
    if( index < List->argc )
@@ -87,8 +93,9 @@ int     lst_del( List_t *List, int index )
    return -1 ;
 }
 
+//
 // lookup a value in the list and return the index | -1 ... 
-int     lst_fnd( List_t *List, void *val )
+int lst_fnd( List_t *List, void *val )
 {
    int i ;
 
@@ -103,8 +110,25 @@ int     lst_fnd( List_t *List, void *val )
    return -1 ;
 }
 
+//
+// search each object using a user specified comparison routine ...
+int lst_lkp( List_t *List, Code_t compare, void *Key )
+{
+   int i ; 
+   if( !isNul( List ) )
+   {
+       for( i = 0 ; i < List ->argc ; i++ )
+       {
+          if( !compare( List->argv[i], Key ) )
+             return i ; 
+       }
+   }
+   return -1 ;
+}
+
+//
 // add an item to the list regardless of capacity ...
-int     lst_add( List_t *List, void *val )
+int lst_add( List_t *List, void *val )
 {
    int newsz ;
    if( List ->argc < List->argsz )
@@ -120,11 +144,12 @@ int     lst_add( List_t *List, void *val )
    return -1 ;
 }
 
+//
 // used internally to quietly expand the list ... 
-int     lst_exp( List_t *List, int newsz )
+int lst_exp( List_t *List, int newsz )
 {
    int i, tmp ; 
-   if( List ->argsz < newsz )
+   if( List->argsz < newsz )
    {
       List ->argv = realloc( List ->argv, (newsz * sizeof( void * )) ) ;
       tmp = List->argsz ;

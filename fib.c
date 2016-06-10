@@ -125,7 +125,7 @@ int cx_server( int wk_socket )
   return rv ;
 }
 
-void *cx_write_task( void *arg )
+void *cx_task_write( void *arg )
 {
   Task_t *T ;
 
@@ -149,7 +149,7 @@ void *cx_write_task( void *arg )
   }
 }
 
-void *cx_read_task( void *arg )
+void *cx_task_read( void *arg )
 {
   Task_t *T ;
 
@@ -164,11 +164,6 @@ void *cx_read_task( void *arg )
 
     q_push( wrk_Q, T ) ;
   }
-}
-
-int cx_client_died( int client )
-{
-  return cx_client_del( client ) ;
 }
 
 int cx_close( int client )
@@ -399,14 +394,14 @@ int main( int argc, char **argv )
 
    // just a few worker threads: 2 readers and 3 writers ... 
    cx = 0 ; 
-   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_read_task, NULL ) ;
-   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_read_task, NULL ) ;
-   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_read_task, NULL ) ;
-   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_read_task, NULL ) ;
-   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_write_task, NULL ) ;
-   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_write_task, NULL ) ;
-   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_write_task, NULL ) ;
-   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_write_task, NULL ) ;
+   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_task_read, NULL ) ;
+   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_task_read, NULL ) ;
+   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_task_read, NULL ) ;
+   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_task_read, NULL ) ;
+   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_task_write, NULL ) ;
+   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_task_write, NULL ) ;
+   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_task_write, NULL ) ;
+   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_task_write, NULL ) ;
 
    // if this returns, it should be a good socket, on a well known port
    // as provided at run time as an argument ... should be > 1024 ... 
