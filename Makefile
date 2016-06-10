@@ -43,11 +43,15 @@ client:	client.o fib.o task.o client.o lst.o
 
 test:	q_test fib client
 	./fib 2222 &
-	time ./client localhost 2222
-	time ./client localhost 2222
-	time ./client localhost 2222
-	time ./client localhost 2222
+	time ./client localhost 2222 &
+	time ./client localhost 2222 &
+	time ./client localhost 2222 &
+	time ./client localhost 2222 &
+	time ./client localhost 2222 &
 ##	time ./q_test 10000000
+
+kill:	
+	killall fib
 
 status:	clean
 	git status
