@@ -100,6 +100,7 @@ int cx_server( int wk_socket )
          max = fd ;
   }
 
+  // wait for i/o ...
   fd_num = max+1 ;
   rv = select( fd_num, &fd_read, NULL, NULL, &tm_out ) ;
   if( rv < 0 )
@@ -108,11 +109,13 @@ int cx_server( int wk_socket )
     return rv ;
   }
 
+  // new connection ...
   if( FD_ISSET( wk_socket, &fd_read ) )
   {
     cx = cx_next( wk_socket ) ;
   } 
 
+  // existing connection, new task ... 
   mx = lst_siz( client_list ) ;
   for( cx = 1 ; cx < mx ; cx++ )
   {
