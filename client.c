@@ -26,7 +26,8 @@ int main( int argc, char **argv )
   host = cx_open( u_host, u_port );
   if( host < 0 )
   {
-	printf( "unable to open host: %s on port %s.\n", u_host, u_port );
+    perror( "ERROR" );
+    exit( host );
   }
 
   latency = 0;

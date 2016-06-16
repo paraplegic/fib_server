@@ -41,8 +41,10 @@ client.o:	client.c
 client:	client.o fib.o task.o client.o lst.o
 	$(CC) $(CCOPTS) client.o task.o fib.o q.o lst.o -o client
 
-test:	q_test fib client
+server:	fib
 	./fib 2222 &
+
+test:	q_test fib client
 	time ./client localhost 2222 &
 	time ./client localhost 2222 &
 	time ./client localhost 2222 &
