@@ -34,7 +34,7 @@ List_t *lst_dst( List_t *List )
                List->siva( List->argv[i] ) ;
          }
       }
-      free( List ->argv ) ;
+      if( !isNul(List ->argv) ) free( List ->argv ) ;
       List ->argv = (void **) NULL ; 
       free( List ) ;
       List = (List_t *) NULL ; 
