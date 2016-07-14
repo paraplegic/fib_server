@@ -401,9 +401,6 @@ int main( int argc, char **argv )
    cx = 0 ; 
    pthread_create( (pthread_t *) &threads[cx++], NULL, cx_task_read, NULL ) ;
    pthread_create( (pthread_t *) &threads[cx++], NULL, cx_task_read, NULL ) ;
-   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_task_read, NULL ) ;
-   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_task_read, NULL ) ;
-   pthread_create( (pthread_t *) &threads[cx++], NULL, cx_task_write, NULL ) ;
    pthread_create( (pthread_t *) &threads[cx++], NULL, cx_task_write, NULL ) ;
    pthread_create( (pthread_t *) &threads[cx++], NULL, cx_task_write, NULL ) ;
    pthread_create( (pthread_t *) &threads[cx++], NULL, cx_task_write, NULL ) ;
