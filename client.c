@@ -7,6 +7,12 @@
 #define FIB_MAX	  40
 #define MYFIB	  10
 
+void client_usage( int argc, char **argv )
+{
+  printf( "%s: <host> <port>\n", argv[0] ) ;
+  exit( 1 ) ;
+}
+
 int main( int argc, char **argv )
 {
   char *u_host, *u_port ;
@@ -16,7 +22,7 @@ int main( int argc, char **argv )
 
   if( argc < 3 )
   {
-    usage();
+    client_usage( argc, argv );
   }
 
   u_host = argv[1];
@@ -34,15 +40,16 @@ int main( int argc, char **argv )
   t_start = task_now() ;
   for( i = 0 ; i < N_TRYS ; i++ )
   {
+     int rqst = i % 40 ;
      start = task_now() ;
-     cx_write( host, MYFIB );
+     cx_write( host, rqst );
      fib = cx_read( host );
      end = task_now() ;
-//     printf( "%d ", fib ) ;
+     // printf( "%d ", fib ) ;
 
      latency += (double) end - (double) start ;
   }
-//  printf( "\n" ) ;
+  // printf( "\n" ) ;
   cx_close( host );
   t_end = task_now() ;
   latency = latency / N_TRYS ;

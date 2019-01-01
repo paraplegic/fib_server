@@ -45,10 +45,12 @@ Task_t *task_del( Task_t *T )
 
 int task_print( Task_t *T )
 {
-  if( !isNul( T ) )
-    if( T->reply == -1 )
+  if( !isNul( T ) ){
+    if( T->reply == -1 ) {
       return printf( "T @%u: (%d %d %d)\n", T->ctime, T->client, T->request, T->reply ) ;
-    else
+    } else {
       return printf( "T @%u: (%d %d %u)\n", T->ctime, T->client, T->request, T->reply ) ;
+    }
+  }
   return -1 ;
 }

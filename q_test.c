@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 #include "task.h"
 #include "q.h"
 
@@ -101,19 +102,19 @@ void *cx_read_task( void *arg )
   thread = (long) arg ;
   bucket[thread] = 0 ;
 
-  printf( "Thread %d STARTED.\n", thread ) ;
+  printf( "Thread %ld STARTED.\n", thread ) ;
   while( FOREVER )
   {
     if( isNul( inp_Q ) )
     {
-      printf( "Input queue lost on thread %d.\n", thread ) ;
+      printf( "Input queue lost on thread %ld.\n", thread ) ;
       pthread_exit( (void *) NULL ) ; 
     }
 
     T = q_pop( inp_Q ) ;
     if( isNul( T ) )
     {
-      printf( "Null task detected in thread %d.\n", thread ) ;
+      printf( "Null task detected in thread %ld.\n", thread ) ;
       mike[thread] += 1;
       pthread_exit( (void *) NULL ) ; 
       continue ;
@@ -122,7 +123,7 @@ void *cx_read_task( void *arg )
     if( T->request == rqst_EXIT )
     {
       T = task_del( T ) ;
-      printf( "Thread %d TERMINATED.\n", thread ) ;
+      printf( "Thread %ld TERMINATED.\n", thread ) ;
       pthread_exit( (void *) NULL ) ; 
     }
 

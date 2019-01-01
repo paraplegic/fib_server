@@ -2,7 +2,7 @@ CODE=fib.c task.c queue.c
 HDRS=task.h queue.h
 BKUP=fib_server.tgz
 EXES=fib q_test client
-CC=gcc
+CC=clang
 CCOPTS=-g
 NOWARN=-Wno-pointer-to-int-cast -Wno-int-to-pointer-cast
 

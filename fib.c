@@ -80,13 +80,14 @@ Queue_t *wrk_Q = (Queue_t *) NULL ;
 int cx_setsignals( void )
 {
    signal( SIGPIPE, SIG_IGN ) ;
+   return 1 ;
 }
 
 int cx_server( int wk_socket )
 {
-  int fd, max, mx, cx, rv = -1 ;
+  int fd, max, mx, cx, rv = 0 ;
 
-  tm_out.tv_sec  = 5 ;
+  tm_out.tv_sec  = 15 ;
   tm_out.tv_usec = 0 ;
 
   max = 0 ; 
@@ -411,7 +412,9 @@ int main( int argc, char **argv )
    wk_socket = cx_wellknown( atol( argv[1] ) ) ;
    while( FOREVER )
    {
-      cx_server( wk_socket ) ;
+      int rv = cx_server( wk_socket ) ;
+      if( rv < 0 )
+        cx_info( "server returned %d.\n", rv ) ;
    }
 
    // no mechanism is available yet to shut down this server ...
