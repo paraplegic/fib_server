@@ -42,14 +42,18 @@ client:	client.o fib.o task.o client.o lst.o
 	$(CC) $(CCOPTS) client.o task.o fib.o q.o lst.o -o client
 
 server:	fib
-	./fib 2222 &
+	./fib 3333 &
+
+profile:	fib
+	#  valgrind --tool=massif --stacks=yes ./fib 3333 &
+	valgrind -v --leak-check=full ./fib 3333 &
 
 test:	q_test fib client
-	time ./client localhost 2222 &
-	time ./client localhost 2222 &
-	time ./client localhost 2222 &
-	time ./client localhost 2222 &
-	time ./client localhost 2222 &
+	time ./client localhost 3333 &
+	time ./client localhost 3333 &
+	time ./client localhost 3333 &
+	time ./client localhost 3333 &
+	time ./client localhost 3333 &
 ##	time ./q_test 10000000
 
 kill:	

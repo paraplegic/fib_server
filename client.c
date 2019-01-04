@@ -3,7 +3,7 @@
 #include "fib.h"
 #include "q.h"
 
-#define N_TRYS	20480
+#define N_TRYS	1024
 #define FIB_MAX	  40
 #define MYFIB	  10
 
