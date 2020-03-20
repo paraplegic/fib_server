@@ -25,6 +25,9 @@ typedef struct _que_ {
 #define INCR( q, val )	((val+1)%q->size)
 #define DECR( q, val )	(((val-1) > -1)?(val-1):0)
 
+int q_empty( Queue_t *Q );
+int q_full( Queue_t *Q );
+
 
 /*
    -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

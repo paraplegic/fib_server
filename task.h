@@ -20,5 +20,6 @@ typedef struct _tsk_ {
 int     task_now( void ) ;
 Task_t *task_crt( int client, int rqst, int reply ) ;
 Task_t *task_del( Task_t *T ) ;
+int		task_print( Task_t *T ) ;
 
 #endif // TASK_DEFINED

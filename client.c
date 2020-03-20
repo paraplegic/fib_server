@@ -48,6 +48,7 @@ int main( int argc, char **argv )
      // printf( "%d ", fib ) ;
 
      latency += (double) end - (double) start ;
+     // printf( "%d returned in %8.3f secs average latency: %8.3f msecs\n", fib, (double)((t_end - t_start)/1000000.0), latency/1000.0 ) ;
   }
   // printf( "\n" ) ;
   cx_close( host );

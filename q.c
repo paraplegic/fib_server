@@ -71,7 +71,7 @@ int q_qty( Queue_t *Q )
 	if( q_empty( Q ) )
 		return Q->size ;
 
-  return Q->head - Q->tail -1 ;
+  return Q->head - Q->tail ;
 }
 
 // room available in the queue ...
