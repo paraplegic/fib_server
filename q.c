@@ -69,14 +69,17 @@ int q_wait( Cond_t *condition, Lock_t *lock )
 int q_qty( Queue_t *Q )
 {
 	if( q_empty( Q ) )
-		return Q->size ;
+		return 0 ;
 
-  return Q->head - Q->tail ;
+  return abs(Q->head - Q->tail) ;
 }
 
 // room available in the queue ...
 int q_avail( Queue_t *Q )
 {
+	if( q_empty( Q ) )
+		return Q->size ;
+
   return Q->size - q_qty( Q ) ;
 }
 
@@ -84,14 +87,13 @@ int q_avail( Queue_t *Q )
 int q_empty( Queue_t *Q )
 {
 	return ( Q->head == Q->tail ) ;
-  return q_avail( Q ) == Q->size ;
 }
 
 // is the queue full ? 1 : 0  ... 
 int q_full( Queue_t *Q )
 {
-	return ( Q->head == ((Q->tail+1) % Q->size)) ;
-   return q_avail( Q ) < 1 ;
+	int rv ;
+	return (q_qty( Q ) < Q->size) ? 0 : 1 ;
 }
 
 /*
@@ -162,7 +164,7 @@ int q_push( Queue_t *Q, void *T )
 
    Q->task[Q->tail] = T ;
 	 Q->tail = INCR( Q, Q->tail) ;
-   rv = q_qty( Q );
+   rv = (int) T ;
    
    q_signal( Q->is_empty ) ;
    while( q_unlock( Q ) ) ;
